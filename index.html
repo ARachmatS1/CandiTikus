@@ -1,18 +1,77 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AR Candi Tikus</title>
+    <title>Digital Heritage: Candi Tikus</title>
+    
+    <script src="https://unpkg.com/coi-serviceworker/coi-serviceworker.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+
     <style>
-        body { margin: 0; overflow: hidden; background-color: #000; }
-        #info {
-            position: absolute; top: 10px; width: 100%;
-            text-align: center; color: white; font-family: sans-serif;
-            pointer-events: none; z-index: 10; font-weight: bold;
-            text-shadow: 1px 1px 2px black;
+        /* --- CSS UNTUK TAMPILAN PROFESIONAL --- */
+        body { margin: 0; overflow: hidden; background-color: #1a1a1a; font-family: 'Lato', sans-serif; }
+        
+        /* Container untuk UI (Text & Tombol) */
+        #ui-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; /* Supaya kita bisa klik model 3D di belakang teks */
+            z-index: 10;
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
+
+        /* Header / Judul */
+        header {
+            padding: 2rem;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+            color: #f4e4bc; /* Warna Emas Pudar */
+            pointer-events: auto;
+        }
+        h1 { margin: 0; font-family: 'Cinzel', serif; font-size: 2.5rem; text-transform: uppercase; letter-spacing: 2px; }
+        p.subtitle { margin: 5px 0 0; font-size: 1rem; opacity: 0.8; }
+
+        /* Kartu Info Sejarah (Pojok Kiri Bawah) */
+        .info-card {
+            background: rgba(20, 20, 20, 0.7); /* Efek Kaca Gelap */
+            backdrop-filter: blur(10px);
+            border-left: 4px solid #d4af37; /* Garis Emas */
+            padding: 20px;
+            margin: 2rem;
+            max-width: 400px;
+            color: white;
+            pointer-events: auto;
+            border-radius: 0 10px 10px 0;
+            transition: transform 0.3s ease;
+        }
+        .info-card h2 { margin-top: 0; font-family: 'Cinzel', serif; color: #d4af37; }
+        .info-card p { line-height: 1.6; font-size: 0.95rem; }
+
+        /* Tombol Kontrol (Pojok Kanan Bawah) */
+        .controls {
+            position: absolute; bottom: 2rem; right: 2rem;
+            pointer-events: auto;
+            display: flex; gap: 10px;
+        }
+        .btn {
+            background: #d4af37; color: #000; border: none; padding: 10px 20px;
+            font-weight: bold; cursor: pointer; border-radius: 30px;
+            text-transform: uppercase; font-size: 0.8rem;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+            transition: all 0.3s;
+        }
+        .btn:hover { background: #fff; transform: translateY(-2px); }
+
+        /* Loading Screen */
+        #loading {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; color: #d4af37;
+            display: flex; justify-content: center; align-items: center;
+            z-index: 99; font-family: 'Cinzel', serif; font-size: 1.5rem;
+            transition: opacity 0.5s;
         }
     </style>
+
     <script type="importmap">
     {
         "imports": {
@@ -23,37 +82,83 @@
     </script>
 </head>
 <body>
-    <div id="info">WebAR Candi Tikus<br><small>Geser 1 jari: Putar | 2 jari: Geser | Cubit: Zoom</small></div>
-    
+
+    <div id="loading">Memuat Situs Warisan Digital...</div>
+
+    <div id="ui-container">
+        <header>
+            <h1>Candi Tikus</h1>
+            <p class="subtitle">Virtual Heritage Site Reconstruction</p>
+        </header>
+
+        <div>
+            <div class="info-card" id="infoBox">
+                <h2>Sejarah Singkat</h2>
+                <p>
+                    Candi Tikus adalah sebuah peninggalan purbakala yang terletak di kompleks Trowulan, bekas ibu kota Majapahit. 
+                    Bentuknya menyerupai petirtaan (pemandian suci) yang unik karena letaknya lebih rendah dari permukaan tanah.
+                </p>
+            </div>
+
+            <div class="controls">
+                <button class="btn" onclick="resetCamera()">Reset Kamera</button>
+                <button class="btn" onclick="toggleInfo()">Sembunyikan Info</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import * as THREE from 'three';
         import * as GaussianSplats3D from 'gaussian-splats-3d';
 
-        // 1. Setup Viewer dengan Mematikan Shared Memory (Solusi Error DataCloneError)
+        // --- KONFIGURASI FILE ---
+        const fileModel = 'Candi_Tikus_GS_2.splat'; // Pastikan nama ini benar!
+
         const viewer = new GaussianSplats3D.Viewer({
             'cameraUp': [0, 1, 0],
-            'initialCameraPosition': [0, 2, 5],
+            'initialCameraPosition': [0, 5, 8], // Posisi kamera agak jauh biar kelihatan megah
             'initialCameraLookAt': [0, 0, 0],
-            'sharedMemoryForWorkers': false,    // <--- INI KUNCI PERBAIKANNYA
+            'sharedMemoryForWorkers': false, // Matikan jika error di HP, hidupkan jika ingin performa
             'useBuiltInControls': true
         });
 
-        // 2. Load File (Pastikan nama file ini SAMA PERSIS dengan di folder)
-        const fileModel = 'Candi_Tikus_GS_2.splat'; 
-
         viewer.addSplatScene(fileModel, {
-            'splatAlphaRemovalThreshold': 5,
-            'showLoadingUI': true
+            'splatAlphaRemovalThreshold': 10, // Hilangkan noise
+            'showLoadingUI': false // Kita pakai loading screen sendiri
         })
         .then(() => {
             viewer.start();
-            console.log("Model berhasil dimuat!");
+            // Hilangkan loading screen setelah selesai
+            const loadingScreen = document.getElementById('loading');
+            loadingScreen.style.opacity = 0;
+            setTimeout(() => loadingScreen.remove(), 500);
+            console.log("Website Siap!");
         })
-        .catch((err) => {
-            console.error("Gagal memuat model:", err);
-            // Jika masih error, pesan ini akan muncul
-            alert("Gagal memuat: " + err); 
+        .catch(err => {
+            document.getElementById('loading').innerText = "Gagal memuat: " + err;
         });
+
+        // --- FUNGSI INTERAKSI TOMBOL ---
+        // Kita pasang ke window supaya bisa dipanggil dari HTML onclick
+        window.resetCamera = function() {
+            // Logika reset kamera (Reload halaman simple-nya)
+            location.reload(); 
+        };
+
+        window.toggleInfo = function() {
+            const box = document.getElementById('infoBox');
+            const btn = document.querySelector('button[onclick="toggleInfo()"]');
+            
+            if (box.style.opacity === '0') {
+                box.style.opacity = '1';
+                box.style.transform = 'translateX(0)';
+                btn.innerText = "Sembunyikan Info";
+            } else {
+                box.style.opacity = '0';
+                box.style.transform = 'translateX(-50px)';
+                btn.innerText = "Tampilkan Info";
+            }
+        };
     </script>
 </body>
 </html>

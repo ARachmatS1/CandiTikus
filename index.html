@@ -3,42 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bengkel Candi Tikus</title>
+    <title>Digital Heritage: Candi Tikus Trowulan</title>
     
     <script src="coi-serviceworker.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital@0;1&family=Lato:wght@300;400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        body { margin: 0; overflow: hidden; background-color: #050505; font-family: 'Roboto', sans-serif; }
-
-        /* Panel Kontrol Bengkel */
-        #editor-panel {
-            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-            width: 90%; max-width: 400px;
-            background: rgba(0, 0, 0, 0.8);
-            border: 2px solid #00ffea;
-            border-radius: 15px;
-            padding: 15px;
-            color: #00ffea;
-            z-index: 100;
-            text-align: center;
+        :root {
+            --primary-gold: #d4af37;
+            --glass-bg: rgba(10, 10, 10, 0.85);
         }
-        
-        .control-group { margin-bottom: 10px; display: flex; justify-content: center; gap: 10px; align-items: center; }
-        .label { font-size: 0.8rem; font-weight: bold; width: 60px; }
-        
-        button {
-            background: #003333; color: #00ffea; border: 1px solid #00ffea;
-            padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold;
+
+        body { 
+            margin: 0; overflow: hidden; background-color: #050505; 
+            font-family: 'Lato', sans-serif; color: #f0f0f0;
         }
-        button:active { background: #00ffea; color: black; }
 
-        #status { font-family: monospace; color: white; margin-bottom: 10px; font-size: 0.9rem; }
-
+        /* --- LOADING SCREEN --- */
         #loader {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            color: #00ffea;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            transition: opacity 1s ease-out;
+        }
+        .spinner {
+            width: 40px; height: 40px; border: 3px solid rgba(212, 175, 55, 0.3);
+            border-top-color: var(--primary-gold); border-radius: 50%;
+            animation: spin 1s infinite linear; margin-bottom: 15px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* --- UI LAYER --- */
+        #ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; /* Klik tembus ke model */
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
+
+        /* Header */
+        header {
+            pointer-events: auto; text-align: center; margin-top: 20px;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.9);
+        }
+        h1 { font-family: 'Cinzel', serif; font-size: 2.2rem; margin: 0; color: var(--primary-gold); letter-spacing: 2px; }
+        .subtitle { font-family: 'Playfair Display', serif; font-style: italic; opacity: 0.8; font-size: 0.9rem; }
+
+        /* Panel Info Kiri */
+        #info-panel {
+            pointer-events: auto;
+            position: absolute; top: 100px; left: 20px; bottom: 100px; width: 300px;
+            background: var(--glass-bg);
+            border-left: 2px solid var(--primary-gold);
+            padding: 20px; border-radius: 0 10px 10px 0;
+            transform: translateX(0); transition: transform 0.4s ease;
+            overflow-y: auto;
+        }
+        #info-panel.hidden { transform: translateX(-350px); }
+
+        .tab-btn {
+            background: none; border: none; color: #888; font-family: 'Cinzel', serif;
+            cursor: pointer; margin-right: 10px; padding-bottom: 5px; font-weight: bold;
+        }
+        .tab-btn.active { color: var(--primary-gold); border-bottom: 2px solid var(--primary-gold); }
+        .content-text { display: none; font-size: 0.9rem; line-height: 1.6; text-align: justify; margin-top: 15px; }
+        .content-text.active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Controls Bawah */
+        #controls-bar {
+            pointer-events: auto; align-self: center; margin-bottom: 30px;
+            background: var(--glass-bg); padding: 10px 25px; border-radius: 50px;
+            display: flex; gap: 15px; border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+        .btn-ctrl {
+            background: none; border: none; color: white; font-size: 1.1rem; cursor: pointer;
+            width: 40px; height: 40px; border-radius: 50%; transition: 0.3s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .btn-ctrl:hover, .btn-ctrl.active { background: rgba(212, 175, 55, 0.2); color: var(--primary-gold); }
+
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            h1 { font-size: 1.5rem; }
+            #info-panel { 
+                top: auto; bottom: 90px; left: 10px; right: 10px; width: auto; height: 35%;
+                border-left: none; border-top: 2px solid var(--primary-gold); border-radius: 10px 10px 0 0;
+            }
+            #info-panel.hidden { transform: translateY(150%); }
         }
     </style>
 
@@ -53,31 +106,43 @@
 </head>
 <body>
 
-    <div id="loader">MEMUAT MODEL...</div>
+    <div id="loader">
+        <div class="spinner"></div>
+        <h2 style="font-family: 'Cinzel'; color: #d4af37; margin:0;">CANDI TIKUS</h2>
+        <small style="color: #666;">Memuat Data 3D...</small>
+    </div>
 
-    <div id="editor-panel">
-        <div id="status">Posisi X: 4.0 | Rotasi Z: 180°</div>
-        
-        <div class="control-group">
-            <span class="label">GESER:</span>
-            <button onclick="updateModel('x', -0.5)"><i class="fas fa-arrow-left"></i> Kiri</button>
-            <button onclick="updateModel('x', 0.5)">Kanan <i class="fas fa-arrow-right"></i></button>
+    <div id="ui-layer">
+        <header id="main-header">
+            <h1>Candi Tikus</h1>
+            <div class="subtitle">Virtual Reconstruction Project</div>
+        </header>
+
+        <div id="info-panel">
+            <div style="border-bottom: 1px solid #333; margin-bottom: 10px;">
+                <button class="tab-btn active" onclick="switchTab('sejarah')">Sejarah</button>
+                <button class="tab-btn" onclick="switchTab('arsitektur')">Arsitektur</button>
+            </div>
+            
+            <div id="sejarah" class="content-text active">
+                <strong style="color:#d4af37">Penemuan Kembali (1914)</strong><br>
+                Candi Tikus terkubur selama berabad-abad hingga ditemukan kembali saat warga membasmi hama tikus di gundukan tanah.
+                <br><br>
+                Situs ini merupakan pemandian kerajaan (Petirtaan) Majapahit yang melambangkan Gunung Mahameru.
+            </div>
+            <div id="arsitektur" class="content-text">
+                <strong style="color:#d4af37">Desain Unik</strong><br>
+                Berbeda dengan candi lain yang menjulang tinggi, Candi Tikus dibangun makin ke bawah (level rendah).
+                Dilengkapi dengan pancuran air (jaladwara) berbentuk makara yang indah.
+            </div>
+            
+            <button onclick="toggleInfo()" style="width:100%; margin-top:15px; background:#222; color:#888; border:none; padding:8px; cursor:pointer;">Tutup Info</button>
         </div>
 
-        <div class="control-group">
-            <span class="label">PUTAR:</span>
-            <button onclick="updateModel('rot', -0.1)">↺ Putar Kiri</button>
-            <button onclick="updateModel('rot', 0.1)">Putar Kanan ↻</button>
-        </div>
-
-        <div class="control-group">
-            <span class="label">ZOOM:</span>
-            <button onclick="updateModel('z', -1)">Mundur</button>
-            <button onclick="updateModel('z', 1)">Maju</button>
-        </div>
-        
-        <div style="font-size: 0.7rem; color: #aaa; margin-top:5px;">
-            Gunakan tombol ini agar pas di tengah!
+        <div id="controls-bar">
+            <button class="btn-ctrl active" onclick="toggleInfo()"><i class="fas fa-book-open"></i></button>
+            <button class="btn-ctrl" onclick="resetView()"><i class="fas fa-sync-alt"></i></button>
+            <button class="btn-ctrl" onclick="toggleFullscreen()"><i class="fas fa-expand"></i></button>
         </div>
     </div>
 
@@ -85,57 +150,67 @@
         import * as THREE from 'three';
         import * as GaussianSplats3D from 'gaussian-splats-3d';
 
-        const fileModel = 'Candi_Tikus_GS_2.splat'; 
+        // --- KONFIGURASI HASIL BENGKEL ---
+        const CONFIG = {
+            file: 'Candi_Tikus_GS_2.splat',
+            posX: -23.0,      // Geser Kanan/Kiri (Data dari kamu)
+            posY: 3.0,        // Geser Naik (Data dari kamu: 3 kali)
+            posZ: 6.0,        // Geser Maju (Data dari kamu: 6 kali)
+            rotZ: Math.PI,    // 180 Derajat (Data dari kamu)
+            scale: 1.5        // Skala standar
+        };
 
         const viewer = new GaussianSplats3D.Viewer({
             'cameraUp': [0, 1, 0],
-            'initialCameraPosition': [0, 0, 12], // Kamera mundur jauh
+            'initialCameraPosition': [0, 1, 12], // Kamera mundur biar lega
             'initialCameraLookAt': [0, 0, 0],
-            'sharedMemoryForWorkers': false,
+            'sharedMemoryForWorkers': false, // Wajib false untuk GitHub Pages
             'useBuiltInControls': true
         });
 
-        window.candiMesh = null;
-        
-        // --- DATA AWAL (PERBAIKAN DARI SAYA) ---
-        // Saya set GESER KANAN (X=4) dan PUTAR BALIK (Z=3.14 atau 180 derajat)
-        let currentX = 4.0;
-        let currentRotZ = Math.PI; // 3.14 radian = 180 derajat
-        let currentZ = 0;
-
-        viewer.addSplatScene(fileModel, {
+        viewer.addSplatScene(CONFIG.file, {
             'splatAlphaRemovalThreshold': 5,
             'showLoadingUI': false
         })
         .then(() => {
             viewer.start();
-            document.getElementById('loader').style.display = 'none';
-
-            window.candiMesh = viewer.splatMesh;
-            if (window.candiMesh) {
-                applyTransform(); // Terapkan perbaikan otomatis saat mulai
-                console.log("Auto-Fix applied!");
+            
+            // Terapkan Posisi Kalibrasi
+            const mesh = viewer.splatMesh;
+            if (mesh) {
+                mesh.position.set(CONFIG.posX, CONFIG.posY, CONFIG.posZ);
+                mesh.rotation.z = CONFIG.rotZ;
+                mesh.scale.set(CONFIG.scale, CONFIG.scale, CONFIG.scale);
+                console.log("Posisi dikalibrasi:", CONFIG);
             }
+
+            // Hapus Loading
+            const loader = document.getElementById('loader');
+            loader.style.opacity = 0;
+            setTimeout(() => loader.remove(), 1000);
+        })
+        .catch(err => {
+            document.getElementById('loader').innerHTML = `<p style="color:red">Error: ${err}</p>`;
         });
 
-        function applyTransform() {
-            if(!window.candiMesh) return;
-            window.candiMesh.position.x = currentX;
-            window.candiMesh.position.z = currentZ;
-            window.candiMesh.rotation.z = currentRotZ;
-            
-            // Update teks status
-            const rotDeg = Math.round(currentRotZ * (180/Math.PI));
-            document.getElementById('status').innerText = 
-                `Posisi X: ${currentX.toFixed(1)} | Rotasi Z: ${rotDeg}°`;
-        }
+        // --- INTERAKSI TOMBOL ---
+        window.switchTab = (id) => {
+            document.querySelectorAll('.content-text').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            event.target.classList.add('active');
+        };
 
-        // Fungsi Tombol
-        window.updateModel = function(type, val) {
-            if (type === 'x') currentX += val;
-            if (type === 'z') currentZ += val; // Geser maju mundur (bukan zoom kamera)
-            if (type === 'rot') currentRotZ += val;
-            applyTransform();
+        window.toggleInfo = () => {
+            document.getElementById('info-panel').classList.toggle('hidden');
+            document.querySelector('.btn-ctrl').classList.toggle('active');
+        };
+
+        window.resetView = () => location.reload();
+
+        window.toggleFullscreen = () => {
+            const ui = document.getElementById('ui-layer');
+            ui.style.opacity = ui.style.opacity === '0' ? '1' : '0';
         };
 
     </script>

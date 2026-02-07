@@ -9,7 +9,8 @@
         #info {
             position: absolute; top: 10px; width: 100%;
             text-align: center; color: white; font-family: sans-serif;
-            pointer-events: none; z-index: 10;
+            pointer-events: none; z-index: 10; font-weight: bold;
+            text-shadow: 1px 1px 2px black;
         }
     </style>
     <script type="importmap">
@@ -22,27 +23,36 @@
     </script>
 </head>
 <body>
-    <div id="info">Geser untuk memutar Candi Tikus<br>Cubit untuk Zoom</div>
+    <div id="info">WebAR Candi Tikus<br><small>Geser 1 jari: Putar | 2 jari: Geser | Cubit: Zoom</small></div>
     
     <script type="module">
         import * as THREE from 'three';
         import * as GaussianSplats3D from 'gaussian-splats-3d';
 
-        // 1. Setup Viewer
+        // 1. Setup Viewer dengan Mematikan Shared Memory (Solusi Error DataCloneError)
         const viewer = new GaussianSplats3D.Viewer({
             'cameraUp': [0, 1, 0],
-            'initialCameraPosition': [0, 2, 5], // Posisi awal kamera (X, Y, Z)
-            'initialCameraLookAt': [0, 0, 0]    // Titik fokus kamera
+            'initialCameraPosition': [0, 2, 5],
+            'initialCameraLookAt': [0, 0, 0],
+            'sharedMemoryForWorkers': false,    // <--- INI KUNCI PERBAIKANNYA
+            'useBuiltInControls': true
         });
 
-        // 2. Load File Candi Tikus
-        // Ganti 'candi_tikus.splat' dengan nama file kamu yang sebenarnya
-        viewer.addSplatScene('Candi_Tikus_GS_2.splat', {
-            'splatAlphaRemovalThreshold': 5, // Menghilangkan noise transparan
+        // 2. Load File (Pastikan nama file ini SAMA PERSIS dengan di folder)
+        const fileModel = 'Candi_Tikus_GS_2.splat'; 
+
+        viewer.addSplatScene(fileModel, {
+            'splatAlphaRemovalThreshold': 5,
             'showLoadingUI': true
         })
         .then(() => {
             viewer.start();
+            console.log("Model berhasil dimuat!");
+        })
+        .catch((err) => {
+            console.error("Gagal memuat model:", err);
+            // Jika masih error, pesan ini akan muncul
+            alert("Gagal memuat: " + err); 
         });
     </script>
 </body>

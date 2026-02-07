@@ -13,12 +13,21 @@
     <style>
         :root {
             --primary-gold: #d4af37;
-            --glass-bg: rgba(10, 10, 10, 0.85);
+            /* Glassmorphism yang lebih modern */
+            --glass-bg: rgba(20, 20, 20, 0.65);
+            --glass-border: 1px solid rgba(212, 175, 55, 0.2);
+            --backdrop-blur: blur(15px);
         }
 
         body { 
-            margin: 0; overflow: hidden; background-color: #050505; 
+            margin: 0; overflow: hidden; background-color: #020202; /* Hitam pekat */
             font-family: 'Lato', sans-serif; color: #f0f0f0;
+        }
+        
+        /* Efek Vignette di pinggir layar */
+        body::after {
+            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            box-shadow: inset 0 0 150px rgba(0,0,0,0.8); pointer-events: none; z-index: 1;
         }
 
         /* --- LOADING SCREEN --- */
@@ -26,75 +35,87 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; z-index: 9999;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            transition: opacity 1s ease-out;
+            transition: opacity 1.2s ease-out; /* Fade out lebih lambat */
         }
         .spinner {
-            width: 50px; height: 50px; border: 3px solid rgba(212, 175, 55, 0.3);
+            width: 50px; height: 50px; border: 3px solid rgba(212, 175, 55, 0.2);
             border-top-color: var(--primary-gold); border-radius: 50%;
-            animation: spin 1s infinite linear; margin-bottom: 20px;
+            animation: spin 2s infinite cubic-bezier(0.4, 0, 0.2, 1); /* Putaran lebih elegan */
+            margin-bottom: 25px; box-shadow: 0 0 15px var(--primary-gold);
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
         /* --- UI CONTAINER --- */
         #ui-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; /* Biar klik tembus ke model 3D */
-            display: flex; flex-direction: column; justify-content: space-between;
+            pointer-events: none; display: flex; flex-direction: column; justify-content: space-between;
+            z-index: 10; /* Di atas vignette */
         }
 
         /* HEADER */
         header {
-            pointer-events: auto; text-align: center; margin-top: 30px;
-            text-shadow: 0 4px 10px rgba(0,0,0,0.9);
+            pointer-events: auto; text-align: center; margin-top: 35px;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.9);
+            animation: slideDown 1s ease-out;
         }
-        h1 { font-family: 'Cinzel', serif; font-size: 2.2rem; margin: 0; color: var(--primary-gold); letter-spacing: 3px; }
-        .subtitle { font-family: 'Playfair Display', serif; font-style: italic; opacity: 0.8; font-size: 0.9rem; letter-spacing: 1px; }
+        h1 { font-family: 'Cinzel', serif; font-size: 2.5rem; margin: 0; color: var(--primary-gold); letter-spacing: 4px; }
+        .subtitle { font-family: 'Playfair Display', serif; font-style: italic; opacity: 0.9; font-size: 1rem; letter-spacing: 1px; color: #ccc; margin-top: 5px; }
 
-        /* PANEL INFO (KIRI) */
+        /* PANEL INFO (KIRI) - GLASSMORPHISM 2.0 */
         #info-panel {
             pointer-events: auto;
-            position: absolute; top: 120px; left: 20px; bottom: 120px; width: 320px;
+            position: absolute; top: 140px; left: 30px; bottom: 140px; width: 340px;
             background: var(--glass-bg);
-            border-left: 2px solid var(--primary-gold);
-            padding: 25px; border-radius: 0 15px 15px 0;
-            transform: translateX(0); transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
-            overflow-y: auto; box-shadow: 5px 0 20px rgba(0,0,0,0.5);
+            backdrop-filter: var(--backdrop-blur); -webkit-backdrop-filter: var(--backdrop-blur);
+            border: var(--glass-border); border-left: 3px solid var(--primary-gold);
+            padding: 30px; border-radius: 15px;
+            transform: translateX(0); transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+            overflow-y: auto; box-shadow: 0 15px 35px rgba(0,0,0,0.5);
         }
-        #info-panel.hidden { transform: translateX(-380px); }
+        #info-panel.hidden { transform: translateX(-400px); opacity: 0; }
 
         .tab-btn {
-            background: none; border: none; color: #666; font-family: 'Cinzel', serif;
-            cursor: pointer; margin-right: 15px; padding-bottom: 5px; font-weight: bold; font-size: 0.9rem;
-            transition: 0.3s;
+            background: none; border: none; color: #777; font-family: 'Cinzel', serif;
+            cursor: pointer; margin-right: 20px; padding-bottom: 8px; font-weight: bold; font-size: 0.95rem;
+            transition: 0.3s; letter-spacing: 1px;
         }
         .tab-btn.active { color: var(--primary-gold); border-bottom: 2px solid var(--primary-gold); }
         
-        .content-text { display: none; font-size: 0.95rem; line-height: 1.7; text-align: justify; margin-top: 20px; color: #ddd; }
-        .content-text.active { display: block; animation: fadeIn 0.6s; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .content-text { display: none; font-size: 1rem; line-height: 1.8; text-align: justify; margin-top: 25px; color: #e0e0e0; }
+        .content-text.active { display: block; animation: fadeIn 0.8s; }
 
         /* TOMBOL KONTROL (BAWAH) */
         #controls-bar {
-            pointer-events: auto; align-self: center; margin-bottom: 40px;
-            background: var(--glass-bg); padding: 12px 30px; border-radius: 50px;
-            display: flex; gap: 20px; border: 1px solid rgba(212, 175, 55, 0.3);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            pointer-events: auto; align-self: center; margin-bottom: 50px;
+            background: var(--glass-bg);
+            backdrop-filter: var(--backdrop-blur); -webkit-backdrop-filter: var(--backdrop-blur);
+            padding: 15px 35px; border-radius: 60px;
+            display: flex; gap: 25px; border: var(--glass-border);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            animation: slideUp 1s ease-out;
         }
         .btn-ctrl {
-            background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer;
-            width: 45px; height: 45px; border-radius: 50%; transition: 0.3s;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; 
+            font-size: 1.3rem; cursor: pointer; width: 50px; height: 50px; border-radius: 50%; transition: 0.4s;
             display: flex; align-items: center; justify-content: center;
         }
-        .btn-ctrl:hover, .btn-ctrl.active { background: rgba(212, 175, 55, 0.2); color: var(--primary-gold); transform: translateY(-3px); }
+        .btn-ctrl:hover, .btn-ctrl.active { background: var(--primary-gold); color: black; box-shadow: 0 0 15px var(--primary-gold); border-color: var(--primary-gold); transform: translateY(-5px); }
+
+        /* ANIMATIONS */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
         /* HP VIEW */
         @media (max-width: 768px) {
-            h1 { font-size: 1.6rem; }
+            h1 { font-size: 1.8rem; letter-spacing: 2px; }
             #info-panel { 
-                top: auto; bottom: 100px; left: 10px; right: 10px; width: auto; height: 40%;
-                border-left: none; border-top: 2px solid var(--primary-gold); border-radius: 15px 15px 0 0;
+                top: auto; bottom: 110px; left: 15px; right: 15px; width: auto; height: 40%;
+                border-left: var(--glass-border); border-top: 3px solid var(--primary-gold); border-radius: 20px 20px 0 0;
             }
-            #info-panel.hidden { transform: translateY(150%); }
+            #info-panel.hidden { transform: translateY(150%); opacity: 1; }
+            #controls-bar { margin-bottom: 30px; padding: 10px 25px; gap: 15px; }
+            .btn-ctrl { width: 45px; height: 45px; font-size: 1.1rem; }
         }
     </style>
 
@@ -111,37 +132,37 @@
 
     <div id="loader">
         <div class="spinner"></div>
-        <h2 style="font-family: 'Cinzel'; color: #d4af37; margin:0; letter-spacing: 2px;">CANDI TIKUS</h2>
-        <small style="color: #666; margin-top: 5px;">Memuat Rekonstruksi Digital...</small>
+        <h2 style="font-family: 'Cinzel'; color: #d4af37; margin:0; letter-spacing: 4px; font-size: 1.5rem;">CANDI TIKUS</h2>
+        <small style="color: #888; margin-top: 10px; letter-spacing: 1px;">Menyiapkan Pengalaman Sinematik...</small>
     </div>
 
     <div id="ui-layer">
         <header id="main-header">
             <h1>Candi Tikus</h1>
-            <div class="subtitle">Majapahit Royal Bathing Site</div>
+            <div class="subtitle">The Hidden Water Palace of Majapahit</div>
         </header>
 
         <div id="info-panel">
-            <div style="border-bottom: 1px solid #333; margin-bottom: 10px;">
+            <div style="border-bottom: 1px solid rgba(212, 175, 55, 0.3); margin-bottom: 15px;">
                 <button class="tab-btn active" onclick="switchTab('sejarah')">Sejarah</button>
                 <button class="tab-btn" onclick="switchTab('arsitektur')">Arsitektur</button>
             </div>
             
             <div id="sejarah" class="content-text active">
-                <strong style="color:#d4af37">Penemuan Kembali (1914)</strong><br>
-                Situs ini ditemukan kembali berkat laporan warga yang terganggu oleh hama tikus di sebuah gundukan tanah. Saat digali, ternyata ditemukan struktur bata merah kuno yang megah.
+                <strong style="color:#d4af37; font-family:'Cinzel';">Penemuan Kembali (1914)</strong><br>
+                Terkubur selama berabad-abad, situs ini ditemukan kembali saat warga desa membasmi hama tikus di gundukan tanah besar. Penggalian mengungkapkan struktur bata merah kuno yang menakjubkan.
                 <br><br>
-                Diperkirakan dibangun pada abad 13-14 Masehi di masa Kerajaan Majapahit, berfungsi sebagai petirtaan (pemandian suci).
+                Diperkirakan dibangun pada era keemasan Majapahit (Abad 13-14 M) sebagai <i style="color:#d4af37">Petirtaan</i> (pemandian suci kerajaan).
             </div>
 
             <div id="arsitektur" class="content-text">
-                <strong style="color:#d4af37">Konsep Meru</strong><br>
-                Bangunan induk di tengah kolam melambangkan Gunung Mahameru, pusat alam semesta.
+                <strong style="color:#d4af37; font-family:'Cinzel';">Konsep Mahameru</strong><br>
+                Struktur induk di tengah kolam adalah replika miniatur Gunung Mahameru, yang dipercaya sebagai pusat alam semesta dalam kosmologi Hindu-Buddha.
                 <br><br>
-                Keunikan Candi Tikus adalah posisinya yang lebih rendah dari permukaan tanah sekitarnya, dengan sistem saluran air (drainase) yang sangat maju pada zamannya.
+                Keunikan utamanya adalah arsitektur "menurun ke bawah", dengan sistem tata air (jaladwara) yang sangat canggih, memanfaatkan sumber air alami.
             </div>
             
-            <button onclick="toggleInfo()" style="width:100%; margin-top:20px; background:#222; color:#888; border:none; padding:10px; cursor:pointer; border-radius:5px;">Tutup Info</button>
+            <button onclick="toggleInfo()" style="width:100%; margin-top:25px; background:rgba(212, 175, 55, 0.1); color:#d4af37; border:1px solid #d4af37; padding:12px; cursor:pointer; border-radius:8px; font-weight:bold; transition:0.3s;">TUTUP INFO</button>
         </div>
 
         <div id="controls-bar">
@@ -155,24 +176,58 @@
         import * as THREE from 'three';
         import * as GaussianSplats3D from 'gaussian-splats-3d';
 
-        // --- DATA FINAL (SUDAH DIKUNCI) ---
+        // --- DATA FINAL KALIBRASI ---
         const CONFIG = {
             file: 'Candi_Tikus_GS_2.splat',
-            posX: -29.0,      // Fix
-            posY: -4.0,       // Fix
-            posZ: 27.5,       // Fix (Update Terbaru)
-            rotZ: 3.14,       // Fix (180 Derajat)
-            scale: 1.4        // Fix (Ukuran Terbaru)
+            posX: -29.0,
+            posY: -4.0,
+            posZ: 27.5,
+            rotZ: 3.14,
+            scale: 1.4
         };
+
+        let isUserInteracting = false;
+        let autoRotateSpeed = 0.0005; // Kecepatan putar otomatis (sangat pelan)
 
         // Setup Viewer
         const viewer = new GaussianSplats3D.Viewer({
             'cameraUp': [0, 1, 0],
-            'initialCameraPosition': [0, 1, 15], 
+            'initialCameraPosition': [0, 2, 18], // Sedikit lebih tinggi dan jauh untuk kesan sinematik
             'initialCameraLookAt': [0, 0, 0],
             'sharedMemoryForWorkers': false,
             'useBuiltInControls': true
         });
+
+        // --- FITUR WOW: PARTIKEL ATMOSFER (Debu Emas) ---
+        function addAtmosphere() {
+            const particleCount = 800;
+            const geometry = new THREE.BufferGeometry();
+            const positions = [];
+
+            for (let i = 0; i < particleCount; i++) {
+                // Sebar partikel di area sekitar candi
+                const x = (Math.random() - 0.5) * 60;
+                const y = (Math.random() - 0.5) * 40;
+                const z = (Math.random() - 0.5) * 60;
+                positions.push(x, y, z);
+            }
+
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+
+            // Material partikel bercahaya
+            const material = new THREE.PointsMaterial({
+                color: 0xd4af37, // Warna emas
+                size: 0.15,
+                transparent: true,
+                opacity: 0.6,
+                blending: THREE.AdditiveBlending // Efek glow
+            });
+
+            const particles = new THREE.Points(geometry, material);
+            particles.name = "atmosphere";
+            viewer.scene.add(particles);
+        }
+        // --------------------------------------------------
 
         // Load Model
         viewer.addSplatScene(CONFIG.file, {
@@ -182,44 +237,74 @@
         .then(() => {
             viewer.start();
             
-            // TERAPKAN POSISI FINAL
             const mesh = viewer.splatMesh;
             if (mesh) {
                 mesh.position.set(CONFIG.posX, CONFIG.posY, CONFIG.posZ);
                 mesh.rotation.z = CONFIG.rotZ;
                 mesh.scale.set(CONFIG.scale, CONFIG.scale, CONFIG.scale);
-                console.log("Model Loaded with Final Coordinates");
+                
+                // Tambahkan partikel setelah model siap
+                addAtmosphere();
             }
 
-            // Hapus Loading Screen
+            // Hapus Loading Screen dengan mulus
             const loader = document.getElementById('loader');
             loader.style.opacity = 0;
-            setTimeout(() => loader.remove(), 1000);
+            setTimeout(() => loader.remove(), 1500);
+
+            // Mulai loop animasi kustom
+            animate();
         })
         .catch(err => {
             document.getElementById('loader').innerHTML = `<p style="color:red; text-align:center;">Gagal Memuat:<br>${err}</p>`;
         });
 
-        // Fungsi Interaksi UI
+        // --- LOOP ANIMASI SINEMATIK ---
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // 1. Rotasi Otomatis Cerdas
+            // Hanya berputar jika pengguna TIDAK sedang menyentuh layar
+            if (!isUserInteracting && viewer.splatMesh) {
+                // Kita putar parent groupnya atau controllernya agar rotasi global
+                viewer.cameraControl.camera.position.applyAxisAngle(new THREE.Vector3(0, 1, 0), autoRotateSpeed);
+                viewer.cameraControl.update();
+            }
+
+            // 2. Gerakkan Partikel Atmosfer pelan-pelan
+            const particles = viewer.scene.getObjectByName("atmosphere");
+            if (particles) {
+                particles.rotation.y += 0.0002; // Partikel berputar sangat pelan
+            }
+        }
+
+        // --- DETEKSI INTERAKSI PENGGUNA ---
+        // Untuk menghentikan auto-rotation saat user menggeser model
+        viewer.renderer.domElement.addEventListener('pointerdown', () => { isUserInteracting = true; });
+        viewer.renderer.domElement.addEventListener('pointerup', () => { isUserInteracting = false; });
+        viewer.renderer.domElement.addEventListener('wheel', () => { 
+            isUserInteracting = true; 
+            clearTimeout(window.scrollTimeout);
+            window.scrollTimeout = setTimeout(() => { isUserInteracting = false; }, 1000);
+        });
+
+
+        // --- FUNGSI UI ---
         window.switchTab = (id) => {
             document.querySelectorAll('.content-text').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             event.target.classList.add('active');
         };
-
         window.toggleInfo = () => {
             document.getElementById('info-panel').classList.toggle('hidden');
-            document.querySelector('.btn-ctrl').classList.toggle('active');
+            document.querySelector('.btn-ctrl[title="Info"]').classList.toggle('active');
         };
-
         window.resetView = () => location.reload();
-
         window.toggleFullscreen = () => {
             const ui = document.getElementById('ui-layer');
             ui.style.opacity = ui.style.opacity === '0' ? '1' : '0';
         };
-
     </script>
 </body>
 </html>

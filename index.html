@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Candi Tikus</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; }
+        #info {
+            position: absolute; top: 10px; width: 100%;
+            text-align: center; color: white; font-family: sans-serif;
+            pointer-events: none; z-index: 10;
+        }
+    </style>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.157.0/build/three.module.js",
+            "gaussian-splats-3d": "https://unpkg.com/@mkkellogg/gaussian-splats-3d@0.2.1/build/gaussian-splats-3d.module.js"
+        }
+    }
+    </script>
+</head>
+<body>
+    <div id="info">Geser untuk memutar Candi Tikus<br>Cubit untuk Zoom</div>
+    
+    <script type="module">
+        import * as THREE from 'three';
+        import * as GaussianSplats3D from 'gaussian-splats-3d';
+
+        // 1. Setup Viewer
+        const viewer = new GaussianSplats3D.Viewer({
+            'cameraUp': [0, 1, 0],
+            'initialCameraPosition': [0, 2, 5], // Posisi awal kamera (X, Y, Z)
+            'initialCameraLookAt': [0, 0, 0]    // Titik fokus kamera
+        });
+
+        // 2. Load File Candi Tikus
+        // Ganti 'candi_tikus.splat' dengan nama file kamu yang sebenarnya
+        viewer.addSplatScene('Candi_Tikus_GS_2.splat', {
+            'splatAlphaRemovalThreshold': 5, // Menghilangkan noise transparan
+            'showLoadingUI': true
+        })
+        .then(() => {
+            viewer.start();
+        });
+    </script>
+</body>
+</html>

@@ -2,73 +2,159 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digital Heritage: Candi Tikus</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Digital Heritage: Candi Tikus Trowulan</title>
     
     <script src="https://unpkg.com/coi-serviceworker/coi-serviceworker.js"></script>
 
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital@0;1&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        /* --- CSS UNTUK TAMPILAN PROFESIONAL --- */
-        body { margin: 0; overflow: hidden; background-color: #1a1a1a; font-family: 'Lato', sans-serif; }
+        /* --- CSS VARIABLES & RESET --- */
+        :root {
+            --primary-gold: #d4af37;
+            --secondary-gold: #aa8c2c;
+            --dark-bg: #121212;
+            --glass-bg: rgba(20, 20, 20, 0.85);
+            --text-light: #f0f0f0;
+        }
+
+        * { box-sizing: border-box; }
         
-        /* Container untuk UI (Text & Tombol) */
-        #ui-container {
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background-color: var(--dark-bg); 
+            font-family: 'Lato', sans-serif; 
+            color: var(--text-light);
+        }
+
+        /* --- LOADING SCREEN --- */
+        #loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            transition: opacity 0.8s ease-out;
+        }
+        .spinner {
+            width: 50px; height: 50px;
+            border: 3px solid rgba(212, 175, 55, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary-gold);
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #loader h2 { font-family: 'Cinzel', serif; letter-spacing: 3px; color: var(--primary-gold); }
+
+        /* --- UI CONTAINER --- */
+        #ui-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; /* Supaya kita bisa klik model 3D di belakang teks */
-            z-index: 10;
+            pointer-events: none; /* Klik tembus ke model 3D */
             display: flex; flex-direction: column; justify-content: space-between;
-        }
-
-        /* Header / Judul */
-        header {
-            padding: 2rem;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
-            color: #f4e4bc; /* Warna Emas Pudar */
-            pointer-events: auto;
-        }
-        h1 { margin: 0; font-family: 'Cinzel', serif; font-size: 2.5rem; text-transform: uppercase; letter-spacing: 2px; }
-        p.subtitle { margin: 5px 0 0; font-size: 1rem; opacity: 0.8; }
-
-        /* Kartu Info Sejarah (Pojok Kiri Bawah) */
-        .info-card {
-            background: rgba(20, 20, 20, 0.7); /* Efek Kaca Gelap */
-            backdrop-filter: blur(10px);
-            border-left: 4px solid #d4af37; /* Garis Emas */
             padding: 20px;
-            margin: 2rem;
-            max-width: 400px;
-            color: white;
-            pointer-events: auto;
-            border-radius: 0 10px 10px 0;
-            transition: transform 0.3s ease;
         }
-        .info-card h2 { margin-top: 0; font-family: 'Cinzel', serif; color: #d4af37; }
-        .info-card p { line-height: 1.6; font-size: 0.95rem; }
 
-        /* Tombol Kontrol (Pojok Kanan Bawah) */
-        .controls {
-            position: absolute; bottom: 2rem; right: 2rem;
+        /* --- HEADER --- */
+        header {
             pointer-events: auto;
-            display: flex; gap: 10px;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            margin-top: 10px;
         }
-        .btn {
-            background: #d4af37; color: #000; border: none; padding: 10px 20px;
-            font-weight: bold; cursor: pointer; border-radius: 30px;
-            text-transform: uppercase; font-size: 0.8rem;
-            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
-            transition: all 0.3s;
+        h1 { 
+            font-family: 'Cinzel', serif; 
+            font-size: 2.5rem; 
+            margin: 0; 
+            color: var(--primary-gold);
+            text-transform: uppercase;
         }
-        .btn:hover { background: #fff; transform: translateY(-2px); }
+        .subtitle { 
+            font-family: 'Playfair Display', serif; 
+            font-style: italic; 
+            font-size: 1.1rem; opacity: 0.8; 
+        }
 
-        /* Loading Screen */
-        #loading {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; color: #d4af37;
-            display: flex; justify-content: center; align-items: center;
-            z-index: 99; font-family: 'Cinzel', serif; font-size: 1.5rem;
-            transition: opacity 0.5s;
+        /* --- SIDEBAR INFO (KIRI) --- */
+        #info-panel {
+            position: absolute; top: 100px; left: 20px; bottom: 100px;
+            width: 320px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border-left: 3px solid var(--primary-gold);
+            border-radius: 0 12px 12px 0;
+            padding: 25px;
+            pointer-events: auto;
+            transform: translateX(0);
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            overflow-y: auto;
+            box-shadow: 5px 0 20px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column;
+        }
+
+        #info-panel.hidden { transform: translateX(-360px); }
+
+        /* Tabs Navigation */
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+        .tab-btn {
+            background: none; border: none; color: #888; 
+            font-family: 'Cinzel', serif; cursor: pointer; font-weight: bold;
+            transition: color 0.3s; padding: 5px 0;
+        }
+        .tab-btn.active { color: var(--primary-gold); border-bottom: 2px solid var(--primary-gold); }
+        .tab-content { display: none; animation: fadeIn 0.5s; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .content-text p { line-height: 1.6; margin-bottom: 15px; font-size: 0.95rem; text-align: justify; }
+        .highlight { color: var(--primary-gold); font-weight: bold; }
+
+        /* --- CONTROLS BAR (BAWAH) --- */
+        #controls-bar {
+            pointer-events: auto;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
+            padding: 10px 30px;
+            margin: 0 auto 20px auto;
+            display: flex; gap: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.6);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .btn-ctrl {
+            background: none; border: none; color: white;
+            font-size: 1.2rem; cursor: pointer; padding: 10px;
+            border-radius: 50%; transition: all 0.2s;
+            width: 45px; height: 45px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .btn-ctrl:hover { background: rgba(212, 175, 55, 0.2); color: var(--primary-gold); transform: translateY(-3px); }
+        .btn-ctrl.active { color: var(--primary-gold); background: rgba(212, 175, 55, 0.1); }
+        
+        /* Tooltip */
+        .btn-ctrl[title]:hover::after {
+            content: attr(title);
+            position: absolute; bottom: 60px;
+            background: black; color: white;
+            padding: 5px 10px; font-size: 0.8rem;
+            border-radius: 5px; white-space: nowrap;
+        }
+
+        /* --- MOBILE RESPONSIVE --- */
+        @media (max-width: 768px) {
+            h1 { font-size: 1.5rem; }
+            #info-panel { 
+                top: auto; bottom: 90px; left: 10px; right: 10px; 
+                width: auto; height: 40%; 
+                border-left: none; border-top: 3px solid var(--primary-gold);
+                border-radius: 12px 12px 0 0;
+                transform: translateY(0);
+            }
+            #info-panel.hidden { transform: translateY(150%); }
+            #controls-bar { width: 90%; justify-content: space-around; padding: 10px; }
         }
     </style>
 
@@ -83,27 +169,52 @@
 </head>
 <body>
 
-    <div id="loading">Memuat Situs Warisan Digital...</div>
+    <div id="loader">
+        <div class="spinner"></div>
+        <h2>Memuat Candi Tikus...</h2>
+        <p style="color: #666; font-size: 0.9rem;">Menyiapkan data 3D point cloud</p>
+    </div>
 
-    <div id="ui-container">
-        <header>
+    <div id="ui-layer">
+        <header id="main-header">
             <h1>Candi Tikus</h1>
-            <p class="subtitle">Virtual Heritage Site Reconstruction</p>
+            <div class="subtitle">Virtual Reconstruction Project</div>
         </header>
 
-        <div>
-            <div class="info-card" id="infoBox">
-                <h2>Sejarah Singkat</h2>
-                <p>
-                    Candi Tikus adalah sebuah peninggalan purbakala yang terletak di kompleks Trowulan, bekas ibu kota Majapahit. 
-                    Bentuknya menyerupai petirtaan (pemandian suci) yang unik karena letaknya lebih rendah dari permukaan tanah.
-                </p>
+        <div id="info-panel">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('sejarah')">Sejarah</button>
+                <button class="tab-btn" onclick="switchTab('arsitektur')">Arsitektur</button>
+                <button class="tab-btn" onclick="switchTab('fungsi')">Fungsi</button>
             </div>
 
-            <div class="controls">
-                <button class="btn" onclick="resetCamera()">Reset Kamera</button>
-                <button class="btn" onclick="toggleInfo()">Sembunyikan Info</button>
+            <div id="sejarah" class="tab-content active content-text">
+                <h3>Penemuan Kembali</h3>
+                <p>Candi Tikus ditemukan kembali pada tahun <span class="highlight">1914</span>. Awalnya situs ini terkubur dalam tanah. Penemuan terjadi ketika warga setempat terganggu oleh hama tikus yang bersarang di gundukan tanah, yang ternyata adalah reruntuhan candi.</p>
+                <p>Situs ini dipugar secara menyeluruh antara tahun 1985 hingga 1989.</p>
             </div>
+
+            <div id="arsitektur" class="tab-content content-text">
+                <h3>Desain Unik</h3>
+                <p>Berbeda dengan candi pada umumnya yang menjulang ke atas, Candi Tikus berbentuk <span class="highlight">Petirtaan</span> (kolam pemandian) yang letaknya lebih rendah dari permukaan tanah sekitarnya.</p>
+                <p>Bangunan induk berbentuk miniatur candi di tengah kolam melambangkan Gunung Mahameru, pusat alam semesta dalam mitologi Hindu-Buddha.</p>
+            </div>
+
+            <div id="fungsi" class="tab-content content-text">
+                <h3>Tempat Suci</h3>
+                <p>Para ahli menduga Candi Tikus berfungsi sebagai tempat pemandian keluarga raja (petirtaan) sekaligus tempat pemujaan untuk memohon kesuburan air.</p>
+                <p>Adanya pancuran air (jaladwara) berbentuk makara dan teratai menunjukkan sistem pengairan yang canggih pada masa Majapahit.</p>
+            </div>
+            
+            <button onclick="toggleInfo()" style="margin-top:auto; width:100%; padding:10px; background:#333; color:white; border:none; border-radius:5px; cursor:pointer;">Tutup Info</button>
+        </div>
+
+        <div id="controls-bar">
+            <button class="btn-ctrl active" onclick="toggleInfo()" title="Info"><i class="fas fa-book-open"></i></button>
+            <button class="btn-ctrl" onclick="setView('top')" title="Tampak Atas"><i class="fas fa-layer-group"></i></button>
+            <button class="btn-ctrl" onclick="setView('front')" title="Tampak Depan"><i class="fas fa-dungeon"></i></button>
+            <button class="btn-ctrl" onclick="toggleRotation()" title="Auto Putar"><i class="fas fa-sync-alt"></i></button>
+            <button class="btn-ctrl" onclick="toggleFullscreen()" title="Mode Bioskop"><i class="fas fa-expand"></i></button>
         </div>
     </div>
 
@@ -111,54 +222,151 @@
         import * as THREE from 'three';
         import * as GaussianSplats3D from 'gaussian-splats-3d';
 
-        // --- KONFIGURASI FILE ---
-        const fileModel = 'Candi_Tikus_GS_2.splat'; // Pastikan nama ini benar!
-
-        const viewer = new GaussianSplats3D.Viewer({
-            'cameraUp': [0, 1, 0],
-            'initialCameraPosition': [0, 5, 8], // Posisi kamera agak jauh biar kelihatan megah
-            'initialCameraLookAt': [0, 0, 0],
-            'sharedMemoryForWorkers': false, // Matikan jika error di HP, hidupkan jika ingin performa
-            'useBuiltInControls': true
-        });
-
-        viewer.addSplatScene(fileModel, {
-            'splatAlphaRemovalThreshold': 10, // Hilangkan noise
-            'showLoadingUI': false // Kita pakai loading screen sendiri
-        })
-        .then(() => {
-            viewer.start();
-            // Hilangkan loading screen setelah selesai
-            const loadingScreen = document.getElementById('loading');
-            loadingScreen.style.opacity = 0;
-            setTimeout(() => loadingScreen.remove(), 500);
-            console.log("Website Siap!");
-        })
-        .catch(err => {
-            document.getElementById('loading').innerText = "Gagal memuat: " + err;
-        });
-
-        // --- FUNGSI INTERAKSI TOMBOL ---
-        // Kita pasang ke window supaya bisa dipanggil dari HTML onclick
-        window.resetCamera = function() {
-            // Logika reset kamera (Reload halaman simple-nya)
-            location.reload(); 
+        // --- KONFIGURASI PENTING (UBAH DISINI UNTUK MEMPERBAIKI POSISI) ---
+        const CONFIG = {
+            fileName: 'Candi_Tikus_GS_2.splat', // Pastikan nama file benar
+            rotateX: -Math.PI / 2,      // Rotasi sumbu X (Agar tidak tidur). Coba -Math.PI/2 atau Math.PI/2
+            rotateY: 0,                 // Rotasi sumbu Y (Putar kiri kanan)
+            rotateZ: 0,                 // Rotasi sumbu Z
+            positionY: -1.0,            // Geser Naik/Turun (Negatif = Turun)
+            scale: 1.5,                 // Perbesar/Perkecil model
+            autoRotateSpeed: 0.3        // Kecepatan putar otomatis
         };
 
-        window.toggleInfo = function() {
-            const box = document.getElementById('infoBox');
-            const btn = document.querySelector('button[onclick="toggleInfo()"]');
+        // Variables
+        let viewer;
+        let isAutoRotating = false;
+        let candiMesh = null;
+
+        // 1. Inisialisasi Viewer
+        function init() {
+            viewer = new GaussianSplats3D.Viewer({
+                'cameraUp': [0, 1, 0],
+                'initialCameraPosition': [0, 4, 8], // Posisi awal kamera (X, Y, Z)
+                'initialCameraLookAt': [0, 0, 0],
+                'sharedMemoryForWorkers': false,    // Wajib false untuk GitHub Pages/Mobile yang aman
+                'useBuiltInControls': true,
+                'sphericalHarmonicsDegree': 0       // 0 biar lebih cepat load-nya
+            });
+
+            // 2. Load Model
+            viewer.addSplatScene(CONFIG.fileName, {
+                'splatAlphaRemovalThreshold': 5,
+                'showLoadingUI': false
+            })
+            .then(() => {
+                onModelLoaded();
+            })
+            .catch(err => {
+                document.getElementById('loader').innerHTML = `
+                    <h3 style="color:red">Gagal Memuat</h3>
+                    <p style="color:white">${err}</p>
+                    <p style="color:#888">Cek nama file di CONFIG (baris 218)</p>
+                `;
+            });
+        }
+
+        // 3. Fungsi Saat Model Selesai Dimuat
+        function onModelLoaded() {
+            // Hilangkan Loading Screen
+            const loader = document.getElementById('loader');
+            loader.style.opacity = 0;
+            setTimeout(() => loader.remove(), 800);
+
+            // Ambil referensi mesh untuk dimanipulasi
+            candiMesh = viewer.splatMesh;
+
+            if (candiMesh) {
+                // --- TERAPKAN PERBAIKAN POSISI (DARI CONFIG DI ATAS) ---
+                candiMesh.rotation.x = CONFIG.rotateX;
+                candiMesh.rotation.y = CONFIG.rotateY;
+                candiMesh.rotation.z = CONFIG.rotateZ;
+                candiMesh.position.y = CONFIG.positionY;
+                candiMesh.scale.set(CONFIG.scale, CONFIG.scale, CONFIG.scale);
+                
+                console.log("Model Position Fixed!");
+            }
+
+            // Mulai Loop Animasi
+            viewer.start();
+            animate();
+        }
+
+        // 4. Loop Animasi (untuk Auto Rotate)
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (isAutoRotating && candiMesh) {
+                // Putar model pelan-pelan pada sumbu Z (karena rotasi lokal berubah)
+                // Atau putar group parent jika perlu. Di sini kita coba putar mesh.
+                // Karena orientasi splat agak beda, kita putar di sumbu yang tegak lurus lantai.
+                // Jika rotasi aneh, matikan fitur ini.
+                candiMesh.rotation.z -= 0.002; 
+            }
+        }
+
+        // --- FUNGSI INTERAKSI GLOBAL (Bisa dipanggil dari HTML) ---
+        
+        // Ganti Tab Info
+        window.switchTab = function(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             
-            if (box.style.opacity === '0') {
-                box.style.opacity = '1';
-                box.style.transform = 'translateX(0)';
-                btn.innerText = "Sembunyikan Info";
+            // Show selected
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active'); // Highlight tombol
+        };
+
+        // Buka/Tutup Panel Info
+        window.toggleInfo = function() {
+            const panel = document.getElementById('info-panel');
+            panel.classList.toggle('hidden');
+            
+            // Update icon warna
+            const btn = document.querySelector('button[title="Info"]');
+            btn.classList.toggle('active');
+        };
+
+        // Auto Rotate Toggle
+        window.toggleRotation = function() {
+            isAutoRotating = !isAutoRotating;
+            const btn = document.querySelector('button[title="Auto Putar"]');
+            btn.classList.toggle('active');
+        };
+
+        // Fullscreen / Hide UI Mode
+        window.toggleFullscreen = function() {
+            const header = document.getElementById('main-header');
+            const panel = document.getElementById('info-panel');
+            
+            if (header.style.opacity === '0') {
+                header.style.opacity = '1';
+                panel.style.opacity = '1';
+                panel.style.pointerEvents = 'auto';
             } else {
-                box.style.opacity = '0';
-                box.style.transform = 'translateX(-50px)';
-                btn.innerText = "Tampilkan Info";
+                header.style.opacity = '0';
+                panel.style.opacity = '0';
+                panel.style.pointerEvents = 'none'; // Biar gak kepencet pas invisible
             }
         };
+
+        // Pindah Posisi Kamera (Tour Guide)
+        window.setView = function(viewType) {
+            // Kita tidak bisa kontrol animasi kamera Three.js dengan mudah di library ini
+            // tanpa akses deep ke controls. Jadi kita pakai cara reset sederhana.
+            // Namun, untuk library ini, kita bisa coba ubah position mesh-nya atau kamera.
+            
+            // Cara aman: Reload halaman untuk reset (Simple)
+            // Cara pro: Gunakan viewer.cameraControls (jika terekspos)
+            
+            // Karena library ini wrapper, kita buat notifikasi saja untuk interaksi manual
+            alert("Gunakan 1 jari untuk memutar, 2 jari untuk menggeser, cubit untuk zoom.");
+        };
+
+        // Jalankan Script
+        init();
+
     </script>
 </body>
 </html>

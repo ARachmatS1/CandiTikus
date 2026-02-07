@@ -150,21 +150,21 @@
         import * as THREE from 'three';
         import * as GaussianSplats3D from 'gaussian-splats-3d';
 
-        // --- KONFIGURASI HASIL BENGKEL ---
+        // --- KONFIGURASI POSISI BARU ---
         const CONFIG = {
             file: 'Candi_Tikus_GS_2.splat',
-            posX: -23.0,      // Geser Kanan/Kiri (Data dari kamu)
-            posY: 3.0,        // Geser Naik (Data dari kamu: 3 kali)
-            posZ: 6.0,        // Geser Maju (Data dari kamu: 6 kali)
-            rotZ: Math.PI,    // 180 Derajat (Data dari kamu)
-            scale: 1.5        // Skala standar
+            posX: -23.0,      // Posisi tetap (kiri/kanan)
+            posY: 8.0,        // <--- INI SUDAH DIUPDATE (3 + 5 = 8.0)
+            posZ: 6.0,        // Posisi tetap (maju/mundur)
+            rotZ: Math.PI,    // Posisi tetap (putar balik)
+            scale: 1.5        
         };
 
         const viewer = new GaussianSplats3D.Viewer({
             'cameraUp': [0, 1, 0],
-            'initialCameraPosition': [0, 1, 12], // Kamera mundur biar lega
+            'initialCameraPosition': [0, 1, 12], 
             'initialCameraLookAt': [0, 0, 0],
-            'sharedMemoryForWorkers': false, // Wajib false untuk GitHub Pages
+            'sharedMemoryForWorkers': false,
             'useBuiltInControls': true
         });
 
@@ -175,16 +175,14 @@
         .then(() => {
             viewer.start();
             
-            // Terapkan Posisi Kalibrasi
             const mesh = viewer.splatMesh;
             if (mesh) {
                 mesh.position.set(CONFIG.posX, CONFIG.posY, CONFIG.posZ);
                 mesh.rotation.z = CONFIG.rotZ;
                 mesh.scale.set(CONFIG.scale, CONFIG.scale, CONFIG.scale);
-                console.log("Posisi dikalibrasi:", CONFIG);
+                console.log("Posisi update ketinggian:", CONFIG.posY);
             }
 
-            // Hapus Loading
             const loader = document.getElementById('loader');
             loader.style.opacity = 0;
             setTimeout(() => loader.remove(), 1000);
@@ -193,7 +191,6 @@
             document.getElementById('loader').innerHTML = `<p style="color:red">Error: ${err}</p>`;
         });
 
-        // --- INTERAKSI TOMBOL ---
         window.switchTab = (id) => {
             document.querySelectorAll('.content-text').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
